@@ -1,0 +1,327 @@
+---
+title: "Assignment 1"
+author: "Hannah Cronin"
+date: "2023-02-19"
+output: html_document
+---
+The following code comes from the Deep Learning with R Notebook. I'm including an untouch control version for comparison purposes. I am using MODELA (4 epochs to compare against).
+```{r}
+library(keras)
+imdb <- dataset_imdb(num_words = 10000)
+c(c(train_data, train_labels), c(test_data, test_labels)) %<-% imdb
+```
+
+```{r}
+str(train_data[[1]])
+```
+
+```{r}
+train_labels[[1]]
+```
+
+```{r}
+vectorize_sequences <- function(sequences, dimension = 10000) {
+  # Create an all-zero matrix of shape (len(sequences), dimension)
+  results <- matrix(0, nrow = length(sequences), ncol = dimension)
+  for (i in 1:length(sequences))
+    # Sets specific indices of results[i] to 1s
+    results[i, sequences[[i]]] <- 1
+  results
+}
+# vectorized training data
+x_train <- vectorize_sequences(train_data)
+# vectorized test data
+x_test <- vectorize_sequences(test_data)
+```
+
+```{r}
+str(x_train[1,])
+```
+
+```{r}
+# vectorized labels
+y_train <- as.numeric(train_labels)
+y_test <- as.numeric(test_labels)
+```
+
+```{r}
+model <- keras_model_sequential() %>% 
+  layer_dense(units = 16, activation = "relu", input_shape = c(10000)) %>% 
+  layer_dense(units = 16, activation = "relu") %>% 
+  layer_dense(units = 1, activation = "sigmoid")
+```
+
+```{r}
+model %>% compile(
+  optimizer = "rmsprop",
+  loss = "binary_crossentropy",
+  metrics = c("accuracy")
+)
+```
+
+```{r}
+model %>% compile(
+  optimizer = optimizer_rmsprop(learning_rate=0.001),
+  loss = "binary_crossentropy",
+  metrics = c("accuracy")
+) 
+```
+--```{r} --Commenting this code chunk out and passing each as strings instead of objects.
+model %>% compile(
+  optimizer = optimizer_rmsprop(learning_rate = 0.001),
+  loss = loss_binary_crossentropy,
+  metrics = metric_binary_accuracy
+) 
+--```
+
+```{r}
+val_indices <- 1:10000
+x_val <- x_train[val_indices,]
+partial_x_train <- x_train[-val_indices,]
+y_val <- y_train[val_indices]
+partial_y_train <- y_train[-val_indices]
+```
+```{r, echo=TRUE, results='hide'}
+model %>% compile(
+  optimizer = "rmsprop",
+  loss = "binary_crossentropy",
+  metrics = c("accuracy")
+)
+history <- model %>% fit(
+  partial_x_train,
+  partial_y_train,
+  epochs = 20,
+  batch_size = 512,
+  validation_data = list(x_val, y_val)
+)
+```
+
+```{r}
+str(history)
+result <- model %>% evaluate(x_test, y_test)
+```
+
+```{r}
+plot(history)
+```
+
+```{r, echo=TRUE, results='hide'}
+modela <- keras_model_sequential() %>% 
+  layer_dense(units = 16, activation = "relu", input_shape = c(10000)) %>% 
+  layer_dense(units = 16, activation = "relu") %>% 
+  layer_dense(units = 1, activation = "sigmoid")
+modela %>% compile(
+  optimizer = "rmsprop",
+  loss = "binary_crossentropy",
+  metrics = c("accuracy")
+)
+modela %>% fit(x_train, y_train, epochs = 4, batch_size = 512)
+results <- modela %>% evaluate(x_test, y_test)
+```
+
+```{r}
+results
+```
+
+```{r}
+modela %>% predict(x_test[1:10,])
+```
+End of "control" code chunk
+-----------------------------
+1. Using 3 Hidden Layers
+
+```{r, echo=TRUE, results='hide'}
+model1 <- keras_model_sequential() %>% 
+  layer_dense(units = 16, activation = "relu", input_shape = c(10000)) %>% 
+  layer_dense(units = 16, activation = "relu") %>%
+  layer_dense(units = 16, activation = "relu") %>% #New hidden layer
+  layer_dense(units = 1, activation = "sigmoid")
+
+model1 %>% compile(
+  optimizer = "rmsprop",
+  loss = "binary_crossentropy",
+  metrics = c("accuracy")
+)
+history1 <- model1 %>% fit(
+  partial_x_train,
+  partial_y_train,
+  epochs = 4,
+  batch_size = 512,
+  validation_data = list(x_val, y_val)
+)
+results1 <- model1 %>% evaluate(x_test, y_test)
+```
+```{r}
+str(history1)
+```
+```{r}
+results1
+plot(history1)
+# After adding another hidden layer, we can see that loss rises rises. With 3 hidden layers, the model is worse at predicting the data and it's targets.
+# Test Accuracy decreases.
+# I would recommend dropped the number of epochs down to 3 to avoid overfitting.
+```
+---------------------------------------
+2. Increase the # of hidden units
+```{r, echo=TRUE, results='hide'}
+model2 <- keras_model_sequential() %>% 
+  layer_dense(units = 32, activation = "relu", input_shape = c(10000)) %>% #Dropped from 16 to 8
+  layer_dense(units = 16, activation = "relu") %>% #Dropped from 16 to 8
+  layer_dense(units = 1, activation = "sigmoid")
+
+model2 %>% compile(
+  optimizer = "rmsprop",
+  loss = "binary_crossentropy",
+  metrics = c("accuracy")
+)
+history2 <- model2 %>% fit(
+  partial_x_train,
+  partial_y_train,
+  epochs = 4,
+  batch_size = 512,
+  validation_data = list(x_val, y_val)
+)
+results2 <- model2 %>% evaluate(x_test, y_test)
+```
+```{r}
+results2
+plot(history2)
+# Increasing the number of hidden units from 16 to 32 for the first layer resulted in an increased loss and a lower accuracy.
+# Again, I'd recommend 3 epochs.
+```
+```{r} 
+# This is a test for my own purposes to see if changing the second layer instead of the first would make a difference
+model2a <- keras_model_sequential() %>% 
+  layer_dense(units = 16, activation = "relu", input_shape = c(10000)) %>% 
+  layer_dense(units = 32, activation = "relu") %>% # Increase
+  layer_dense(units = 1, activation = "sigmoid")
+
+model2a %>% compile(
+  optimizer = "rmsprop",
+  loss = "binary_crossentropy",
+  metrics = c("accuracy")
+)
+history2a <- model2a %>% fit(
+  partial_x_train,
+  partial_y_train,
+  epochs = 4,
+  batch_size = 512,
+  validation_data = list(x_val, y_val)
+)
+results2a <- model2a %>% evaluate(x_test, y_test)
+# These results are still worse than the original model, but do look better compared to Model2.
+```
+-----------------------
+3. Using MSE loss function
+```{r}
+model3 <- keras_model_sequential() %>% 
+  layer_dense(units = 16, activation = "relu", input_shape = c(10000)) %>% 
+  layer_dense(units = 16, activation = "relu") %>% 
+  layer_dense(units = 1, activation = "sigmoid")
+
+model3 %>% compile(
+  optimizer = "rmsprop",
+  loss = "mse", #Loss function of MSE
+  metrics = c("accuracy")
+)
+history3 <- model3 %>% fit(
+  partial_x_train,
+  partial_y_train,
+  epochs = 4,
+  batch_size = 512,
+  validation_data = list(x_val, y_val)
+)
+results3 <- model3 %>% evaluate(x_test, y_test)
+```
+```{r}
+results3
+plot(history3)
+# With the MSE function, loss is lower as compared to Binary Crossentropy, but Binary Crossentropy is the better option due to the nature that our output is a probability.
+# Loss looks better, but MSE probably is not the correct approach.
+# Accuracy is also very slightly lower.
+```
+-----------------------------------------
+4. Using TANH activation
+```{r}
+model4 <- keras_model_sequential() %>% 
+  layer_dense(units = 16, activation = "tanh", input_shape = c(10000)) %>%
+  layer_dense(units = 16, activation = "tanh") 
+  layer_dense(units = 1, activation = "sigmoid")
+
+model4 %>% compile(
+  optimizer = "rmsprop",
+  loss = "binary_crossentropy",
+  metrics = c("accuracy")
+)
+history4 <- model4 %>% fit(
+  partial_x_train,
+  partial_y_train,
+  epochs = 4,
+  batch_size = 512,
+  validation_data = list(x_val, y_val)
+)
+results4 <- model4 %>% evaluate(x_test, y_test)
+```
+```{r}
+results4
+plot(history4)
+# This model is a much poorer choice due to the drastically increased loss and decreased accuracy.
+# Relu as an activation function is much better and avoids the problems caused by TANH.
+```
+----------------------------------------------
+5. Using dropout
+```{r}
+model5 <- keras_model_sequential() %>% 
+  layer_dense(units = 16, activation = "relu", input_shape = c(10000)) %>%
+  layer_dropout(0.4) %>%
+  layer_dense(units = 16, activation = "relu") %>%
+  layer_dropout(0.4) %>%
+  layer_dense(units = 1, activation = "sigmoid")
+
+model5 %>% compile(
+  optimizer = "rmsprop",
+  loss = "binary_crossentropy",
+  metrics = c("accuracy")
+)
+history5 <- model5 %>% fit(
+  partial_x_train,
+  partial_y_train,
+  epochs = 4,
+  batch_size = 512,
+  validation_data = list(x_val, y_val)
+)
+results5 <- model5 %>% evaluate(x_test, y_test)
+# I tried using both 0.3 and 0.5 and the dropout of 0.4 yielded the best results.
+```
+```{r}
+plot(history5)
+results5
+```
+-----------------------------------------
+A model with multiple changes
+```{r}
+model6 <- keras_model_sequential() %>% 
+  layer_dense(units = 16, activation = "relu", input_shape = c(10000)) %>%
+  layer_dropout(0.4) %>%
+  layer_dense(units = 16, activation = "relu") %>%
+  layer_dropout(0.4) %>%
+  layer_dense(units = 1, activation = "sigmoid")
+
+model6 %>% compile(
+  optimizer = "rmsprop",
+  loss = "mse",
+  metrics = c("accuracy")
+)
+history6 <- model6 %>% fit(
+  partial_x_train,
+  partial_y_train,
+  epochs = 4,
+  batch_size = 512,
+  validation_data = list(x_val, y_val)
+)
+results6 <- model6 %>% evaluate(x_test, y_test)
+```
+While changes multiple things on the original model, the was the best combinations of things I was able to find. I've run through many versions of this model with variations of the numbers, but have not been able to get the model to increase in accuracy. The MSE makes the loss lower, but I'm not sure I agree with it's usage in this model (I mentioned the reason above). I was interested to see how changing multiple things on the same model would react, but I have not been able to improve upon the original.
+
+Note: I avoided using actual figures for my comparison descriptions the numbers change when I go to knit the R Markdown file. Due to the slight randomizations, the numbers are similar but never the same with each run.
+
