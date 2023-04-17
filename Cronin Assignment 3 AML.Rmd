@@ -1,0 +1,452 @@
+---
+title: "AML Assignment 3 Cronin"
+author: "Hannah Cronin"
+date: "2023-04-16"
+output: html_document
+---
+I made each of these changes individually on a LSTR model (see my email) for extra analysis
+```{r}
+library(keras)
+max_features <- 10000  # Number of words to consider as features
+maxlen <- 500  # Cuts off texts after this many words (among the max_features most common words)
+batch_size <- 32
+cat("Loading data...\n")
+```
+```{r}
+imdb <- dataset_imdb(num_words = max_features)
+c(c(input_train, y_train), c(input_test, y_test)) %<-% imdb 
+cat(length(input_train), "train sequences\n")
+```
+```{r}
+cat(length(input_test), "test sequences")
+```
+```{r}
+cat("Pad sequences (samples x time)\n")
+```
+```{r}
+input_train <- pad_sequences(input_train, maxlen = maxlen)
+input_test <- pad_sequences(input_test, maxlen = maxlen)
+cat("input_train shape:", dim(input_train), "\n")
+```
+```{r}
+cat("input_test shape:", dim(input_test), "\n")
+```
+```{r}
+set.seed(123)
+model <- keras_model_sequential() %>% 
+  layer_embedding(input_dim = max_features, output_dim = 32) %>% 
+  layer_lstm(units = 32) %>% 
+  layer_dense(units = 1, activation = "sigmoid")
+model %>% compile(
+  optimizer = "rmsprop", 
+  loss = "binary_crossentropy", 
+  metrics = c("acc")
+)
+history <- model %>% fit(
+  input_train, y_train,
+  epochs = 10,
+  batch_size = 128,
+  validation_split = 0.2
+)
+```
+```{r}
+plot(history)
+history
+```
+------------------
+1. Cut off Reviews after 150 words
+```{r}
+max_features <- 10000  # Number of words to consider as features
+maxlen <- 150  # Cuts off texts after this many words (among the max_features most common words)
+batch_size <- 32
+cat("Loading data...\n")
+```
+```{r}
+imdb <- dataset_imdb(num_words = max_features)
+c(c(input_train, y_train), c(input_test, y_test)) %<-% imdb
+cat(length(input_train), "train sequences\n")
+```
+```{r}
+cat(length(input_test), "test sequences")
+```
+```{r}
+cat("Pad sequences (samples x time)\n")
+```
+```{r}
+input_train <- pad_sequences(input_train, maxlen = maxlen)
+input_test <- pad_sequences(input_test, maxlen = maxlen)
+cat("input_train shape:", dim(input_train), "\n")
+```
+```{r}
+cat("input_test shape:", dim(input_test), "\n")
+```
+```{r}
+set.seed(123)
+model1 <- keras_model_sequential() %>% 
+  layer_embedding(input_dim = max_features, output_dim = 32) %>% 
+  layer_lstm(units = 32) %>% 
+  layer_dense(units = 1, activation = "sigmoid")
+model1 %>% compile(
+  optimizer = "rmsprop", 
+  loss = "binary_crossentropy", 
+  metrics = c("acc")
+)
+history1 <- model1 %>% fit(
+  input_train, y_train,
+  epochs = 10,
+  batch_size = 128,
+  validation_split = 0.2
+)
+```
+```{r}
+plot(history1)
+history1
+```
+After cutting off reviews at 150 words, the training accuracy and loss are the same, but the validation accuracy and loss performed just slightly poorer.
+-----------------------------------
+2. Restrict training samples to 100
+```{r}
+max_features <- 10000  # Number of words to consider as features
+maxlen <- 500  # Cuts off texts after this many words (among the max_features most common words)
+batch_size <- 100
+cat("Loading data...\n")
+```
+```{r}
+imdb <- dataset_imdb(num_words = max_features)
+c(c(input_train, y_train), c(input_test, y_test)) %<-% imdb 
+cat(length(input_train), "train sequences\n")
+```
+
+```{r}
+cat(length(input_test), "test sequences")
+```
+
+```{r}
+cat("Pad sequences (samples x time)\n")
+```
+
+```{r}
+input_train <- pad_sequences(input_train, maxlen = maxlen)
+input_test <- pad_sequences(input_test, maxlen = maxlen)
+cat("input_train shape:", dim(input_train), "\n")
+```
+
+```{r}
+cat("input_test shape:", dim(input_test), "\n")
+```
+
+```{r}
+set.seed(123)
+model2 <- keras_model_sequential() %>% 
+  layer_embedding(input_dim = max_features, output_dim = 32) %>% 
+  layer_lstm(units = 32) %>% 
+  layer_dense(units = 1, activation = "sigmoid")
+model2 %>% compile(
+  optimizer = "rmsprop", 
+  loss = "binary_crossentropy", 
+  metrics = c("acc")
+)
+history2 <- model2 %>% fit(
+  input_train, y_train,
+  epochs = 10,
+  batch_size = 100,
+  validation_split = 0.2
+)
+```
+
+```{r}
+plot(history2)
+history2
+```
+With training sample sizes of 100, the training accuracy and loss are similar to the original model as well as the validation loss and accuracy.
+
+--------------------------------------------------------
+3. Validate on 10,000 samples
+```{r}
+max_features <- 10000  # Number of words to consider as features
+maxlen <- 500  # Cuts off texts after this many words (among the max_features most common words)
+batch_size <- 32
+cat("Loading data...\n")
+```
+```{r}
+imdb <- dataset_imdb(num_words = max_features)
+c(c(input_train, y_train), c(input_test, y_test)) %<-% imdb 
+cat(length(input_train), "train sequences\n")
+```
+
+```{r}
+cat(length(input_test), "test sequences")
+```
+
+```{r}
+cat("Pad sequences (samples x time)\n")
+```
+
+```{r}
+input_train <- pad_sequences(input_train, maxlen = maxlen)
+input_test <- pad_sequences(input_test, maxlen = maxlen)
+cat("input_train shape:", dim(input_train), "\n")
+```
+
+```{r}
+cat("input_test shape:", dim(input_test), "\n")
+```
+
+```{r}
+set.seed(123)
+model3 <- keras_model_sequential() %>% 
+  layer_embedding(input_dim = max_features, output_dim = 32) %>% 
+  layer_lstm(units = 32) %>% 
+  layer_dense(units = 1, activation = "sigmoid")
+model3 %>% compile(
+  optimizer = "rmsprop", 
+  loss = "binary_crossentropy", 
+  metrics = c("acc")
+)
+history3 <- model3 %>% fit(
+  input_train, y_train,
+  epochs = 10,
+  batch_size = 128,
+  validation_split = 0.4
+)
+```
+
+```{r}
+plot(history3)
+history3
+```
+The training accuracy and loss were very similar to the original - maybe a little better and validation accuracy and loss performed a little worse than the original.
+
+------------------------------------
+4. Keep top 10,000 words
+
+```{r}
+top_words <- 10000  # Top 10,000 words
+maxlen <- 500  # Cuts off texts after this many words (among the max_features most common words)
+batch_size <- 32
+cat("Loading data...\n")
+```
+```{r}
+imdb <- dataset_imdb(num_words = top_words)
+c(c(input_train, y_train), c(input_test, y_test)) %<-% imdb 
+cat(length(input_train), "train sequences\n")
+```
+
+```{r}
+cat(length(input_test), "test sequences")
+```
+
+```{r}
+cat("Pad sequences (samples x time)\n")
+```
+
+```{r}
+input_train <- pad_sequences(input_train, maxlen = maxlen)
+input_test <- pad_sequences(input_test, maxlen = maxlen)
+cat("input_train shape:", dim(input_train), "\n")
+```
+
+```{r}
+cat("input_test shape:", dim(input_test), "\n")
+```
+
+```{r}
+set.seed(123)
+model4 <- keras_model_sequential() %>% 
+  layer_embedding(input_dim = max_features, output_dim = 32) %>% 
+  layer_lstm(units = 32) %>% 
+  layer_dense(units = 1, activation = "sigmoid")
+model4 %>% compile(
+  optimizer = "rmsprop", 
+  loss = "binary_crossentropy", 
+  metrics = c("acc")
+)
+history4 <- model4 %>% fit(
+  input_train, y_train,
+  epochs = 10,
+  batch_size = 128,
+  validation_split = 0.2
+)
+```
+
+```{r}
+plot(history4)
+history4
+```
+This model is the same as the original and therefore performs similarly.
+--------------------------------------------------------------------------
+Combined model (for fun)
+```{r}
+top_words <- 10000  # Top 10,000 words
+maxlen <- 150  # Cuts off texts after this many words (among the max_features most common words)
+batch_size <- 100
+cat("Loading data...\n")
+```
+
+```{r}
+imdb <- dataset_imdb(num_words = top_words)
+c(c(input_train, y_train), c(input_test, y_test)) %<-% imdb 
+cat(length(input_train), "train sequences\n")
+```
+
+```{r}
+cat(length(input_test), "test sequences")
+```
+
+```{r}
+cat("Pad sequences (samples x time)\n")
+```
+
+```{r}
+input_train <- pad_sequences(input_train, maxlen = maxlen)
+input_test <- pad_sequences(input_test, maxlen = maxlen)
+cat("input_train shape:", dim(input_train), "\n")
+```
+
+```{r}
+cat("input_test shape:", dim(input_test), "\n")
+```
+
+```{r}
+set.seed(123)
+model5 <- keras_model_sequential() %>% 
+  layer_embedding(input_dim = max_features, output_dim = 32) %>% 
+  layer_lstm(units = 32) %>% 
+  layer_dense(units = 1, activation = "sigmoid")
+model5 %>% compile(
+  optimizer = "rmsprop", 
+  loss = "binary_crossentropy", 
+  metrics = c("acc")
+)
+history5 <- model5 %>% fit(
+  input_train, y_train,
+  epochs = 10,
+  batch_size = 100,
+  validation_split = 0.4
+)
+```
+
+```{r}
+plot(history5)
+history5
+```
+------------------------
+Embedding Layers:
+
+```{r}
+imdb_dir <- "/Users/hannahcronin/Downloads/aclImdb"
+train_dir <- file.path(imdb_dir, "train")
+labels <- c()
+texts <- c()
+for (label_type in c("neg", "pos")) {
+  label <- switch(label_type, neg = 0, pos = 1)
+  dir_name <- file.path(train_dir, label_type)
+  for (fname in list.files(dir_name, pattern = glob2rx("*.txt"),
+                           full.names = TRUE)) {
+    texts <- c(texts, readChar(fname, file.info(fname)$size))
+    labels <- c(labels, label)
+  }
+}
+```
+
+```{r}
+embedding_dim <- 100
+maxlen <- 150                                                      
+training_samples <- 100                                          
+validation_samples <- 10000                                       
+max_words <- 10000                                              
+tokenizer <- text_tokenizer(num_words = max_words) %>%
+  fit_text_tokenizer(texts)
+sequences <- texts_to_sequences(tokenizer, texts)
+word_index = tokenizer$word_index
+cat("Found", length(word_index), "unique tokens.\n")
+data <- pad_sequences(sequences, maxlen = maxlen)
+labels <- as.array(labels)
+cat("Shape of data tensor:", dim(data), "\n")
+cat('Shape of label tensor:', dim(labels), "\n")
+indices <- sample(1:nrow(data))     
+training_indices <- indices[1:training_samples]
+validation_indices <- indices[(training_samples + 1):
+                              (training_samples + validation_samples)]
+x_train <- data[training_indices,]
+y_train <- labels[training_indices]
+x_val <- data[validation_indices,]
+y_val <- labels[validation_indices]
+```
+
+```{r}
+set.seed(123)
+modela <- keras_model_sequential() %>%
+  layer_embedding(input_dim = max_words, output_dim = embedding_dim,
+                  input_length = maxlen) %>%
+  layer_flatten() %>%
+  layer_dense(units = 32, activation = "relu") %>%
+  layer_dense(units = 1, activation = "sigmoid")
+modela %>% compile(
+  optimizer = "rmsprop",
+  loss = "binary_crossentropy",
+  metrics = c("acc")
+)
+historya <- modela %>% fit(
+  x_train, y_train,
+  epochs = 20,
+  batch_size = 32,
+  validation_data = list(x_val, y_val)
+)
+```
+This model did not perform well and is very overfitted.
+
+-----------------------------------------------------
+
+```{r}
+embedding_dim <- 100
+maxlen <- 150                                                      
+training_samples <- 10000                                    
+validation_samples <- 10000                                         
+max_words <- 10000                                              
+tokenizer <- text_tokenizer(num_words = max_words) %>%
+  fit_text_tokenizer(texts)
+sequences <- texts_to_sequences(tokenizer, texts)
+word_index = tokenizer$word_index
+cat("Found", length(word_index), "unique tokens.\n")
+data <- pad_sequences(sequences, maxlen = maxlen)
+labels <- as.array(labels)
+cat("Shape of data tensor:", dim(data), "\n")
+cat('Shape of label tensor:', dim(labels), "\n")
+indices <- sample(1:nrow(data))     
+training_indices <- indices[1:training_samples]
+validation_indices <- indices[(training_samples + 1):
+                              (training_samples + validation_samples)]
+x_train <- data[training_indices,]
+y_train <- labels[training_indices]
+x_val <- data[validation_indices,]
+y_val <- labels[validation_indices]
+```
+
+```{r}
+set.seed(123)
+modelb <- keras_model_sequential() %>%
+  layer_embedding(input_dim = max_words, output_dim = embedding_dim,
+                  input_length = maxlen) %>%
+  layer_flatten() %>%
+  layer_dense(units = 32, activation = "relu") %>%
+  layer_dense(units = 1, activation = "sigmoid")
+modelb %>% compile(
+  optimizer = "rmsprop",
+  loss = "binary_crossentropy",
+  metrics = c("acc")
+)
+historyb <- modelb %>% fit(
+  x_train, y_train,
+  epochs = 20,
+  batch_size = 32,
+  validation_data = list(x_val, y_val)
+)
+```
+```{r}
+plot(historyb)
+historyb
+```
+The model is still overfitted, but performances substantially better against the validation data when the the training sample sizes were 10,000.
+
+
